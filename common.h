@@ -1,44 +1,22 @@
 #pragma once
 //---------------------------------------------------------------------------
 // Linux C mode compiler already has these types defined
+#include <c++/cstdint>
+
 #if !defined(__LINUX__) || defined(__cplusplus)
 typedef unsigned char  uchar;   ///< unsigned 8 bit value
 typedef unsigned short ushort;  ///< unsigned 16 bit value
 typedef unsigned int   uint;    ///< unsigned 32 bit value
 #endif
 
-typedef          char   int8;   ///< signed 8 bit value
-typedef signed   char   sint8;  ///< signed 8 bit value
-typedef unsigned char   uint8;  ///< unsigned 8 bit value
-typedef          short  int16;  ///< signed 16 bit value
-typedef unsigned short  uint16; ///< unsigned 16 bit value
-typedef          int    int32;  ///< signed 32 bit value
-typedef unsigned int    uint32; ///< unsigned 32 bit value
-
-								//---------------------------------------------------------------------------
-#if defined(__BORLANDC__)
-
-#define __HAS_LONGLONG__
-								//#define __HAS_INT128__
-typedef unsigned __int64 ulonglong;
-typedef          __int64 longlong;
-
-#elif defined(_MSC_VER)
-
-#define __HAS_LONGLONG__
-typedef unsigned __int64 ulonglong;
-typedef          __int64 longlong;
-
-#elif defined(__GNUC__)
-
-#define __HAS_LONGLONG__
-typedef unsigned long long ulonglong;
-typedef          long long longlong;
-
-#endif
-
-typedef longlong        int64;  ///< signed 64 bit value
-typedef ulonglong       uint64; ///< unsigned 64 bit value
+typedef uint8_t             u1;
+typedef uint16_t            u2;
+typedef uint32_t            u4;
+typedef uint64_t            u8;
+typedef int8_t              s1;
+typedef int16_t             s2;
+typedef int32_t             s4;
+typedef int64_t             s8;
 
 #ifndef MAXSTR
 #define MAXSTR 1024                ///< maximum string size
@@ -48,19 +26,44 @@ typedef ulonglong       uint64; ///< unsigned 64 bit value
 #define FMT_64 "L"
 #endif // !FMT_64
 
+// 补充一些Android的定义
+#ifdef __ANDROID__
+#include <android/log.h>
+#define FLOG_TAG "F8LEFT"
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, FLOG_TAG, __VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, FLOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, FLOG_TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, FLOG_TAG, __VA_ARGS__)
+#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, FLOG_TAG, __VA_ARGS__)
+#else
+#define LOGE printf
+#define LOGD printf
+#define LOGW printf
+#define LOGI printf
+#define LOGV printf
+#endif
+
+#define ALOGE LOGE
+#define ALOGV LOGV
+#define ALOGW LOGW
+#define ALOGD LOGD
+#define ALOGI LOGI
+
 #define PAGE_SHIFT    12
 #define PAGE_SIZE    (1UL << PAGE_SHIFT) //就是它，这里是4096个字节
 
-#define PAGE_MASK    (~(PAGE_SIZE-1))
-								// Returns the address of the page containing address 'x'.
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+#ifndef PAGESIZE
+#define PAGESIZE PAGE_SIZE
+#endif
+#define PAGE_MASK (~(PAGE_SIZE) - 1)
+
 #define PAGE_START(x)  ((x) & PAGE_MASK)
-
-								// Returns the offset of address 'x' in its page.
 #define PAGE_OFFSET(x) ((x) & ~PAGE_MASK)
-
-								// Returns the address of the next page after address 'x', unless 'x' is
-								// itself at the start of a page.
 #define PAGE_END(x)    PAGE_START((x) + (PAGE_SIZE-1))
+
 
 #define SOINFO_NAME_LEN 128
 

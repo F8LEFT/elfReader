@@ -6,22 +6,22 @@
 //=========================================================================
 struct elf_ident_t
 {
-  uint32 magic;
+  u4 magic;
 #if __MF__
 #  define ELF_MAGIC 0x7F454C46 // big endian \x7FELF
 #else
 #  define ELF_MAGIC 0x464C457F // litte endian \x7FELF
 #endif
-  uint8 elf_class;
+  u1 elf_class;
 #define   ELFCLASSNONE  0    // Invalid class
 #define   ELFCLASS32    1    // 32bit object
 #define   ELFCLASS64    2    // 64bit object
-  uint8 bytesex;
+  u1 bytesex;
 #define   ELFDATANONE    0   // Invalid data encoding
 #define   ELFDATA2LSB    1   // low byte first
 #define   ELFDATA2MSB    2   // high byte first
-  uint8 version;             // file version
-  uint8 osabi;               // Operating System/ABI indication
+  u1 version;             // file version
+  u1 osabi;               // Operating System/ABI indication
 #define   ELFOSABI_NONE          0 // UNIX System V ABI
 #define   ELFOSABI_HPUX          1 // HP-UX operating system
 #define   ELFOSABI_NETBSD        2 // NetBSD
@@ -41,30 +41,26 @@ struct elf_ident_t
 #define   ELFOSABI_C6000_LINUX  65 // TI TMS320C6 MMU-less Linux platform
 #define   ELFOSABI_ARM          97 // ARM
 #define   ELFOSABI_STANDALONE   255 // Standalone (embedded) application
-  uint8 abiversion;          // ABI version
-  uint8 pad[7];
-
-  bool is_valid() const { return magic == ELF_MAGIC; }
-  bool is_msb()   const { return bytesex == ELFDATA2MSB; };
-  bool is_64()    const { return elf_class == ELFCLASS64; };
+  u1 abiversion;          // ABI version
+  u1 pad[7];
 };
 
 struct Elf32_Ehdr
 {
   elf_ident_t e_ident;
-  uint16  e_type;               // enum ET
-  uint16  e_machine;            // enum EM
-  uint32  e_version;            // enum EV
-  uint32  e_entry;              // virtual start address
-  uint32  e_phoff;              // off to program header table's (pht)
-  uint32  e_shoff;              // off to section header table's (sht)
-  uint32  e_flags;              // EF_machine_flag
-  uint16  e_ehsize;             // header's size
-  uint16  e_phentsize;          // size of pht element
-  uint16  e_phnum;              // entry counter in pht
-  uint16  e_shentsize;          // size of sht element
-  uint16  e_shnum;              // entry count in sht
-  uint16  e_shstrndx;           // sht index in name table
+  u2  e_type;               // enum ET
+  u2  e_machine;            // enum EM
+  u4  e_version;            // enum EV
+  u4  e_entry;              // virtual start address
+  u4  e_phoff;              // off to program header table's (pht)
+  u4  e_shoff;              // off to section header table's (sht)
+  u4  e_flags;              // EF_machine_flag
+  u2  e_ehsize;             // header's size
+  u2  e_phentsize;          // size of pht element
+  u2  e_phnum;              // entry counter in pht
+  u2  e_shentsize;          // size of sht element
+  u2  e_shnum;              // entry count in sht
+  u2  e_shstrndx;           // sht index in name table
 };
 
 
@@ -282,16 +278,16 @@ enum elh_SHN
 
 struct Elf32_Shdr
 {
-  uint32 sh_name;      // index in string table
-  uint32 sh_type;      // enum SHT
-  uint32 sh_flags;     // enum SHF
-  uint32 sh_addr;      // address in memmory (or 0)
-  uint32 sh_offset;    // offset in file
-  uint32 sh_size;      // section size in bytes
-  uint32 sh_link;      // index in symbol table
-  uint32 sh_info;      // extra information
-  uint32 sh_addralign; // 0 & 1 => no alignment
-  uint32 sh_entsize;   // size symbol table or eq.
+  u4 sh_name;      // index in string table
+  u4 sh_type;      // enum SHT
+  u4 sh_flags;     // enum SHF
+  u4 sh_addr;      // address in memmory (or 0)
+  u4 sh_offset;    // offset in file
+  u4 sh_size;      // section size in bytes
+  u4 sh_link;      // index in symbol table
+  u4 sh_info;      // extra information
+  u4 sh_addralign; // 0 & 1 => no alignment
+  u4 sh_entsize;   // size symbol table or eq.
 };
 
 
@@ -369,12 +365,12 @@ enum elf_GRP
 
 struct Elf32_Sym
 {
-  uint32    st_name;        //index in string table
-  uint32    st_value;       //absolute value or addr
-  uint32    st_size;        //0-unknow or no, elsewere symbol size in bytes
+  u4    st_name;        //index in string table
+  u4    st_value;       //absolute value or addr
+  u4    st_size;        //0-unknow or no, elsewere symbol size in bytes
   unsigned char st_info;        //type and attribute (thee below)
   unsigned char st_other;       //==0
-  uint16    st_shndx;       //index in section header table
+  u2    st_shndx;       //index in section header table
 };
 
 #define ELF_ST_BIND(i)    ((i)>>4)
@@ -438,8 +434,8 @@ enum elf_ST_OTHER
 // relocation
 struct Elf32_Rel
 {
-  uint32    r_offset;       //virtual address
-  uint32    r_info;         //type of relocation
+  u4    r_offset;       //virtual address
+  u4    r_info;         //type of relocation
 };
 
 #define ELF32_R_SYM(i)    ((i)>>8)
@@ -448,23 +444,23 @@ struct Elf32_Rel
 
 struct Elf32_Rela
 {
-  uint32    r_offset;
-  uint32    r_info;
-  int32   r_addend;       //constant to compute
+  u4    r_offset;
+  u4    r_info;
+  s4   r_addend;       //constant to compute
 };
 
 //=================Loading & dynamic linking========================
 // program header
 struct Elf32_Phdr
 {
-  uint32    p_type;         //Segment type. see below
-  uint32    p_offset;       //from beginning of file at 1 byte of segment resides
-  uint32    p_vaddr;        //virtual addr of 1 byte
-  uint32    p_paddr;        //reserved for system
-  uint32    p_filesz;       //may be 0
-  uint32    p_memsz;        //may be 0
-  uint32    p_flags;        // for PT_LOAD access mask (PF_xxx)
-  uint32    p_align;        //0/1-no,
+  u4    p_type;         //Segment type. see below
+  u4    p_offset;       //from beginning of file at 1 byte of segment resides
+  u4    p_vaddr;        //virtual addr of 1 byte
+  u4    p_paddr;        //reserved for system
+  u4    p_filesz;       //may be 0
+  u4    p_memsz;        //may be 0
+  u4    p_flags;        // for PT_LOAD access mask (PF_xxx)
+  u4    p_align;        //0/1-no,
 };
 
 enum elf_SEGFLAGS
@@ -515,11 +511,11 @@ enum elf_SEGTYPE
 //=================Dynamic section===============================
 struct Elf32_Dyn
 {
-  int32   d_tag;          //see below
+  s4   d_tag;          //see below
   union
   {
-    uint32  d_val;          //integer value with various interpretation
-    uint32  d_ptr;          //programm virtual adress
+    u4  d_val;          //integer value with various interpretation
+    u4  d_ptr;          //programm virtual adress
   } d_un;
 };
 //extern Elf32_Dyn _DYNAMIC[];
@@ -633,86 +629,86 @@ enum elf_DTAG
 struct Elf64_Ehdr
 {
   elf_ident_t e_ident;
-  uint16    e_type;
-  uint16    e_machine;
-  uint32    e_version;
-  uint64    e_entry;          // Entry point virtual address
-  uint64    e_phoff;          // Program header table file offset
-  uint64    e_shoff;          // Section header table file offset
-  uint32    e_flags;
-  uint16    e_ehsize;
-  uint16    e_phentsize;
-  uint16    e_phnum;
-  uint16    e_shentsize;
-  uint16    e_shnum;
-  uint16    e_shstrndx;
+  u2    e_type;
+  u2    e_machine;
+  u4    e_version;
+  u8    e_entry;          // Entry point virtual address
+  u8    e_phoff;          // Program header table file offset
+  u8    e_shoff;          // Section header table file offset
+  u4    e_flags;
+  u2    e_ehsize;
+  u2    e_phentsize;
+  u2    e_phnum;
+  u2    e_shentsize;
+  u2    e_shnum;
+  u2    e_shstrndx;
 };
 
 struct Elf64_Shdr
 {
-  uint32    sh_name;      // Section name, index in string tbl
-  uint32    sh_type;      // Type of section
-  uint64    sh_flags;     // Miscellaneous section attributes
-  uint64    sh_addr;      // Section virtual addr at execution
-  uint64    sh_offset;    // Section file offset
-  uint64    sh_size;      // Size of section in bytes
-  uint32    sh_link;      // Index of another section
-  uint32    sh_info;      // Additional section information
-  uint64    sh_addralign; // Section alignment
-  uint64    sh_entsize;   // Entry size if section holds table
+  u4    sh_name;      // Section name, index in string tbl
+  u4    sh_type;      // Type of section
+  u8    sh_flags;     // Miscellaneous section attributes
+  u8    sh_addr;      // Section virtual addr at execution
+  u8    sh_offset;    // Section file offset
+  u8    sh_size;      // Size of section in bytes
+  u4    sh_link;      // Index of another section
+  u4    sh_info;      // Additional section information
+  u8    sh_addralign; // Section alignment
+  u8    sh_entsize;   // Entry size if section holds table
 };
 
 //
 struct Elf64_Sym
 {
-  uint32    st_name;    // Symbol name, index in string tbl
-  uint8     st_info;    // Type and binding attributes
-  uint8     st_other;   // No defined meaning, 0
-  uint16    st_shndx;   // Associated section index
-  uint64    st_value;   // Value of the symbol
-  uint64    st_size;    // Associated symbol size
+  u4    st_name;    // Symbol name, index in string tbl
+  u1     st_info;    // Type and binding attributes
+  u1     st_other;   // No defined meaning, 0
+  u2    st_shndx;   // Associated section index
+  u8    st_value;   // Value of the symbol
+  u8    st_size;    // Associated symbol size
 };
 
 struct Elf64_Rel
 {
-  uint64    r_offset;  // Location at which to apply the action
-  uint64    r_info;    // index and type of relocation
+  u8    r_offset;  // Location at which to apply the action
+  u8    r_info;    // index and type of relocation
 };
 
 struct Elf64_Rela
 {
-  uint64    r_offset;    // Location at which to apply the action
-  uint64    r_info;      // index and type of relocation
-  int64     r_addend;    // Constant addend used to compute value
+  u8    r_offset;    // Location at which to apply the action
+  u8    r_info;      // index and type of relocation
+  s8     r_addend;    // Constant addend used to compute value
 };
 
 
 //#define ELF64_R_SYM(i)           ((i) >> 32)
 //#define ELF64_R_TYPE(i)    ((i) & 0xffffffff)
 //#define ELF64_R_INFO(s,t)  (((bfd_vma) (s) << 32) + (bfd_vma) (t))
-#define ELF64_R_SYM(i)     uint32((i) >> 32)
-#define ELF64_R_TYPE(i)    uint32(i)
+#define ELF64_R_SYM(i)     u4((i) >> 32)
+#define ELF64_R_TYPE(i)    u4(i)
 
 
 struct Elf64_Phdr
 {
-  uint32    p_type;
-  uint32    p_flags;
-  uint64    p_offset;   // Segment file offset
-  uint64    p_vaddr;    // Segment virtual address
-  uint64    p_paddr;    // Segment physical address
-  uint64    p_filesz;   // Segment size in file
-  uint64    p_memsz;    // Segment size in memory
-  uint64    p_align;    // Segment alignment, file & memory
+  u4    p_type;
+  u4    p_flags;
+  u8    p_offset;   // Segment file offset
+  u8    p_vaddr;    // Segment virtual address
+  u8    p_paddr;    // Segment physical address
+  u8    p_filesz;   // Segment size in file
+  u8    p_memsz;    // Segment size in memory
+  u8    p_align;    // Segment alignment, file & memory
 };
 
 struct Elf64_Dyn
 {
-  uint64 d_tag;   // entry tag value
+  u8 d_tag;   // entry tag value
   union
   {
-	  uint64  d_val;          //integer value with various interpretation
-	  uint64  d_ptr;          //programm virtual adress
+	  u8  d_val;          //integer value with various interpretation
+	  u8  d_ptr;          //programm virtual adress
   } d_un;
 };
 //extern Elf64_Dyn _DYNAMIC[];
