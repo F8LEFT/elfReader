@@ -219,19 +219,24 @@ public:
     bool parseFromMem(u1 *mem, u4 len);
 
 private:
-    elf_ident_t *ident;
-    union {
+    elf_ident_t *ident = NULL;
+    union ehdr_t{
         Elf32_Ehdr *_32;
         Elf64_Ehdr *_64;
+        void *p;
     } ehdr;
-    union {
+    union shdr_t{
         Elf32_Shdr *_32;        //start of shdr
         Elf64_Shdr *_64;
-    } shdr;
-    union {
+        void *p;
+    };
+    union phdr_t{
         Elf32_Phdr *_32;        //start of phdr
         Elf64_Phdr *_64;
-    } phdr;
+        void *p;
+    };
+    shared_ptr<shdr_t> shdrs;
+    shared_ptr<phdr_t> phdrs;
 
 public:
     // error handler, 可以用来修复reader过程中的bug，毕竟某些东西带混淆的
@@ -261,7 +266,9 @@ public:
     template<typename ehdrx, typename phdrx>
     bool readProgramheader(ehdrx *ehdr, phdrx* phdr);
     template<typename ehdrx, typename shdrx, typename phdrx>
-    bool readSectionHeader(ehdrx *ehdr, shdrx shdr, phdrx phdr);
+    bool readSectionHeader(ehdrx *ehdr, shdrx shdr, phdrx phdr);        //must have programe header
+
+
 
     u4 getSectionOff();
     u4 getProgramOff();

@@ -7,8 +7,7 @@
 #include <fstream>
 
 //-------------Error handler------------
-bool silentHandler(const ElfReader &reader, ElfReader::errcode_t code, ...)
-{
+bool silentHandler(const ElfReader &reader, ElfReader::errcode_t code, ...) {
     return true; // resume after warnings
 }
 
@@ -49,7 +48,7 @@ bool ElfReader::readIdent() {
         return false;
     }
 
-    ident = (elf_ident_t*)reader.seekg(0);
+    ident = (elf_ident_t *) reader.seekg(0);
 
     if (!isValid()) {
         return false;
@@ -93,11 +92,11 @@ bool ElfReader::readIdent() {
 
 bool ElfReader::readHeader() {
     if (!is64()) {
-        ehdr._32 = (Elf32_Ehdr *) reader.seekg(0);
-        return readHeader(ehdr._32);
+        Elf32_Ehdr *et = (Elf32_Ehdr *) reader.seekg(0);
+        return readHeader(et);
     } else {
-        ehdr._64 = (Elf64_Ehdr *) reader.seekg(0);
-        return readHeader(ehdr._64);
+        Elf64_Ehdr * et = (Elf64_Ehdr *) reader.seekg(0);
+        return readHeader(et);
     }
 }
 
@@ -105,12 +104,15 @@ bool ElfReader::readHeader() {
 bool ElfReader::readSectionHeader() {
     u4 sec = getSectionOff();
     if (!sec) return false;
+    assert(phdrs.get() != NULL);
     if (!is64()) {
-        shdr._32 = (Elf32_Shdr *) reader.seekg(sec);
-        return readSectionHeader(ehdr._32, shdr._32, phdr._32);
+        Elf32_Shdr *st = (Elf32_Shdr *) reader.seekg(sec);
+        Elf32_Phdr *pt = phdrs.get()->_32;
+        return readSectionHeader(ehdr._32, st, pt);
     } else {
-        shdr._64 = (Elf64_Shdr *) reader.seekg(sec);
-        return readSectionHeader(ehdr._64, shdr._64, phdr._64);
+        Elf64_Shdr *st = (Elf64_Shdr *) reader.seekg(sec);
+        Elf64_Phdr *pt = phdrs.get()->_64;
+        return readSectionHeader(ehdr._64, st, pt);
     }
 }
 
@@ -118,17 +120,23 @@ bool ElfReader::readProgramheader() {
     u4 sec = getProgramOff();
     if (!sec) return false;
     if (!is64()) {
-        phdr._32 = (Elf32_Phdr *) reader.seekg(sec);
-        return readProgramheader(ehdr._32, phdr._32);
+        Elf32_Phdr *phdrStart = (Elf32_Phdr *) reader.seekg(sec);
+        return readProgramheader(ehdr._32, phdrStart);
     } else {
-        phdr._64 = (Elf64_Phdr *) reader.seekg(sec);
-        return readProgramheader(ehdr._64, phdr._64);
+        Elf64_Phdr *phdrStart = (Elf64_Phdr *) reader.seekg(sec);
+        return readProgramheader(ehdr._64, phdrStart);
     }
 }
 
 
 template<typename ehdrx>
+#ifdef BPROC
 bool ElfReader::readHeader(ehdrx *header) {
+#else
+bool ElfReader::readHeader(ehdrx *header1) {
+    Elf32_Ehdr *header;
+#endif
+    ehdr.p = header;
     if (header->e_ehsize != stdsizes.ehdr) {
         if (!handle_error(*this, BAD_EHSIZE, header->e_ehsize, stdsizes.ehdr)) {
             return false;
@@ -176,20 +184,66 @@ bool ElfReader::readHeader(ehdrx *header) {
     return true;
 }
 
+
+u4 ElfReader::getSectionOff() {
+    if (!is64()) {
+        return ehdr._32->e_shoff;
+    } else {
+        return ehdr._64->e_shoff;
+    }
+}
+
+u4 ElfReader::getProgramOff() {
+    if (!is64()) {
+        return ehdr._32->e_phoff;
+    } else {
+        return ehdr._64->e_phoff;
+    }
+}
+
+
 template<typename ehdrx, typename shdrx, typename phdrx>
+#ifdef BPROC
+bool ElfReader::readSectionHeader(ehdrx *ehdr, shdrx shdr, phdrx phdr) {
+#else
 bool ElfReader::readSectionHeader(ehdrx *ehdr1, shdrx shdr1, phdrx phdr1) {
     Elf32_Ehdr *ehdr;
     Elf32_Shdr *shdr;
     Elf32_Phdr *phdr;
+#endif
+    decltype(shdr) pShdr = shdr;
 
-    return 0;
+    u4 count = ehdr->e_shnum;
+
+    shdrs.reset(new shdr_t[count], [](shdr_t*p) { delete[]p; });
+    shdr_t *st = shdrs.get();
+    for (int i = 0; i < count; ++i) {
+        st->p = pShdr;      //Addresss
+        pShdr = (decltype(pShdr))((u1*)pShdr + stdsizes.shdr);
+        st++;
+    }
+
+    return true;
 }
 
 template<typename ehdrx, typename phdrx>
+#ifdef BPROC
+bool ElfReader::readProgramheader(ehdrx *ehdr, phdrx *phdr) {
+#else
 bool ElfReader::readProgramheader(ehdrx *ehdr1, phdrx *phdr1) {
     Elf32_Ehdr *ehdr;
     Elf32_Phdr *phdr;
-    return 0;
+#endif
+    decltype(phdr) pPhdr = phdr;
+    u4 count = ehdr->e_phnum;
+    phdrs.reset(new phdr_t[count], [](phdr_t* p) { delete[]p; });
+    phdr_t* pt = phdrs.get();
+    for (int i = 0; i < count; ++i) {
+        pt->p = pPhdr;      //Addresss
+        pPhdr = (decltype(pPhdr))((u1*)pPhdr + stdsizes.phdr);
+        pt++;
+    }
+    return true;
 }
 
 
@@ -238,6 +292,10 @@ bool ElfReader::isValid() {
     }
     return true;
 }
+
+
+
+
 
 
 
